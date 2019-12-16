@@ -28,15 +28,20 @@ class SearchBar(GridLayout):
         super(SearchBar, self).__init__(**kwargs)
         self.cols = 2
 
-        search_button = Button(text='Search')
-        search_button.bind(on_press=self.search_btn_pressed)
+        self.search_button = Button(text='Search')
+        self.search_button.bind(on_press=self.search_btn_pressed)
 
-        self.searchInput = TextInput(multiline=False)
-        self.add_widget(search_button)
-        self.add_widget(self.searchInput)
+        self.search_input = TextInput(multiline=False)
+        self.search_input.bind(text=self.on_type)
+        self.add_widget(self.search_button)
+        self.add_widget(self.search_input)
 
     def search_btn_pressed(self, button):
-        send_to_socket(self.searchInput.text)
+        print("Search button pressed")
+        # send_to_socket(self.search_input.text)
+
+    def on_type(self, instance, text):
+        send_to_socket(self.search_input.text)
 
 
 class InterfaceGUIApplication(App):
