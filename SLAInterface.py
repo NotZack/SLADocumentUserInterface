@@ -1,25 +1,49 @@
 import socket
+import kivy
+from kivy.app import App
+from kivy.uix.button import Button
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+
+kivy.require('1.11.0')
+
+client_socket = socket.socket()
 
 
-def client_program():
-    host = socket.gethostname()  # as both code is running on same pc
-    port = 5119  # socket server port number
+def open_socket(port_number):
+    host = socket.gethostname()
+    port = port_number
+    client_socket.connect((host, port))
 
-    client_socket = socket.socket()  # instantiate
-    client_socket.connect((host, port))  # connect to the server
 
-    message = input(" -> ")  # take input
+def send_to_socket(message):
+    client_socket.sendall((message + '\n').encode())
+    data = client_socket.recv(1024).decode()
+    print('Received from server: ' + data)
 
-    while message.lower().strip() != 'bye':
-        client_socket.sendall((message + '\n').encode())  # send message
-        data = client_socket.recv(1024).decode()  # receive response
 
-        print('Received from server: ' + data)  # show in terminal
+class SearchBar(GridLayout):
 
-        message = input(" -> ")  # again take input
+    def __init__(self, **kwargs):
+        super(SearchBar, self).__init__(**kwargs)
+        self.cols = 2
 
-    client_socket.close()  # close the connection
+        search_button = Button(text='Search')
+        search_button.bind(on_press=self.search_btn_pressed)
+
+        self.searchInput = TextInput(multiline=False)
+        self.add_widget(search_button)
+        self.add_widget(self.searchInput)
+
+    def search_btn_pressed(self, button):
+        send_to_socket(self.searchInput.text)
+
+
+class InterfaceGUIApplication(App):
+    def build(self):
+        return SearchBar()
 
 
 if __name__ == '__main__':
-    client_program()
+    open_socket(5119)
+    InterfaceGUIApplication().run()
