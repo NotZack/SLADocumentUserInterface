@@ -33,11 +33,25 @@ def collect_room_data(room_string):
     return send_query_to_socket("Collect_Unique_Room_Data:" + room_string)
 
 
+class RootLayout(FloatLayout):
+
+    search_display = None
+    room_data_display = None
+
+    def __init__(self, **kwargs):
+        super(RootLayout, self).__init__(**kwargs)
+
+        self.search_display = SearchComponents()
+        self.room_data_display = RoomDataComponents()
+
+        self.add_widget(self.search_display)
+        self.add_widget(self.room_data_display)
+
+
 class SearchComponents(FloatLayout):
 
     def __init__(self, **kwargs):
         super(SearchComponents, self).__init__(**kwargs)
-
         self.search_input = TextInput(multiline=False, size_hint=(0.10, 0.033), pos_hint={'x': 0.05, 'y': 0.90})
         self.search_input.bind(text=self.on_type)
 
@@ -62,26 +76,49 @@ class SearchComponents(FloatLayout):
                 if len(data) > 2:
                     # , background_normal='', background_color=(0,0,0,0)
                     result_button = Button(text=data, size_hint=(0.1, 0.03))
-                    result_button.bind(on_press=self.show_room_data)
+                    result_button.bind(on_press=self.on_room_collect)
                     self.search_results.add_widget(result_button)
 
-    def show_room_data(self, button):
+    def on_room_collect(self, button):
+        if ("Invalid query" in button.text) or ("No results found" in button.text):
+            return
+
         self.search_input.text = button.text
         room_data = collect_room_data(button.text)
-        room_data = room_data[1:-1]
 
-        pos_offset = 20
-        for session in room_data.split(']'):
-            test_label = Label(text=session, pos=(400, 600 - pos_offset), size_hint=(0.5, 0.03))
-            self.add_widget(test_label)
-            pos_offset += 20
+        root.room_data_display.show_room_data(room_data)
 
-        print(room_data)
+
+class RoomDataComponents(FloatLayout):
+
+    def show_room_data(self, room_data):
+        room_data = self.parse_room_data(room_data)
+
+    @staticmethod
+    def parse_room_data(raw_data):
+        raw_data = raw_data[1:-1]
+        raw_data = raw_data.replace(", [", "").replace("[", "")
+
+        outer_array = []
+        for room in raw_data.split(']'):
+            inner_array = []
+
+            for field in room.split(','):
+                inner_array.append(field)
+
+            if len(inner_array) > 1:
+                outer_array.append(inner_array)
+
+        for x in outer_array:
+            print(*x, sep=" ")
+
+
+root = RootLayout()
 
 
 class InterfaceGUIApplication(App):
     def build(self):
-        return SearchComponents()
+        return root
 
 
 if __name__ == '__main__':
