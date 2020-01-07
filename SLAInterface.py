@@ -1,13 +1,12 @@
 import socket
 import kivy
-import re
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from kivy.config import Config
-from kivy.uix.label import Label
+from kivy.uix.togglebutton import ToggleButton
 
 Config.set('graphics', 'width', '1920')
 Config.set('graphics', 'height', '1020')
@@ -91,8 +90,58 @@ class SearchComponents(FloatLayout):
 
 class RoomDataComponents(FloatLayout):
 
+    room_data = None
+    current_view = FloatLayout
+
+    def __init__(self, **kwargs):
+        super(RoomDataComponents, self).__init__(**kwargs)
+
+        self.weekly_toggle = ToggleButton(
+            text="Weekly Schedule", state="down", group="view", size_hint=(0.1, 0.1), pos_hint={'x': 0.5, 'y': 0.90}
+        )
+        self.information_toggle = ToggleButton(
+            text="Room Information", group="view", size_hint=(0.1, 0.1), pos_hint={'x': 0.60, 'y': 0.90}
+        )
+
+        self.weekly_toggle.bind(on_release=self.check_toggle_state)
+        self.information_toggle.bind(on_release=self.check_toggle_state)
+        self.weekly_toggle.disabled = True
+        self.information_toggle.disabled = True
+
+        self.add_widget(self.weekly_toggle)
+        self.add_widget(self.information_toggle)
+
+    def check_toggle_state(self, button):
+        if self.information_toggle.disabled:
+            self.information_toggle.disabled = False
+            self.weekly_toggle.disabled = True
+
+            self.destroy_current_view()
+            self.display_weekly_schedule(self.room_data)
+        else:
+            self.weekly_toggle.disabled = False
+            self.information_toggle.disabled = True
+
+            self.destroy_current_view()
+            self.display_room_information(self.room_data)
+
     def show_room_data(self, room_data):
-        room_data = self.parse_room_data(room_data)
+        self.room_data = self.parse_room_data(room_data)
+
+        self.check_toggle_state(None)
+
+    @staticmethod
+    def destroy_current_view():
+        pass
+
+    @staticmethod
+    def display_weekly_schedule(room_data):
+        print("Display weekly schedule!")
+        pass
+
+    @staticmethod
+    def display_room_information(room_data):
+        print("Display room information!")
 
     @staticmethod
     def parse_room_data(raw_data):
@@ -109,8 +158,7 @@ class RoomDataComponents(FloatLayout):
             if len(inner_array) > 1:
                 outer_array.append(inner_array)
 
-        for x in outer_array:
-            print(*x, sep=" ")
+        return outer_array
 
 
 root = RootLayout()
