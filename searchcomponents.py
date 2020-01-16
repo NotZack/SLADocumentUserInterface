@@ -11,13 +11,13 @@ class SearchComponents(FloatLayout):
 
     def __init__(self, **kwargs):
         super(SearchComponents, self).__init__(**kwargs)
-        self.search_input = TextInput(multiline=False, size_hint=(0.10, 0.033), pos_hint={'x': 0.05, 'y': 0.90})
+        self.search_input = TextInput(multiline=False, size_hint=(0.10, 0.05), pos_hint={'x': 0.05, 'y': 0.90})
         self.search_input.bind(text=self.on_type)
 
-        self.search_button = Button(text='Search', size_hint=(0.10, 0.033), pos_hint={'x': 0.15, 'y': 0.90})
+        self.search_button = Button(text='Search', size_hint=(0.10, 0.05), pos_hint={'x': 0.15, 'y': 0.90})
         self.search_button.bind(on_press=self.on_search_press)
 
-        self.search_results = GridLayout(cols=1, size_hint=(0.2, 0.25), pos_hint={'x': 0.05, 'y': 0.65})
+        self.search_results = GridLayout(cols=1, size_hint=(0.2, 0.25), pos_hint={'x': 0.05, 'y': 0.60})
 
         self.add_widget(self.search_button)
         self.add_widget(self.search_input)

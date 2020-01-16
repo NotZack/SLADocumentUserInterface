@@ -86,8 +86,10 @@ class RoomSchedule(FloatLayout):
 
     time_format = "%I:%M %p"
 
+    grid_buttons_x = 0.28
+    grid_buttons_y = 0.85
     grid_button_length = 0.09
-    grid_button_height = 0.024
+    grid_button_height = 0.026
     grid_start_time = datetime.strptime("07:00 AM", time_format)
     grid_end_time = end_time = datetime.strptime("10:00 PM", time_format)
 
@@ -105,28 +107,33 @@ class RoomSchedule(FloatLayout):
         count = self.grid_button_length
         for day in col_headers:
             self.add_widget(
-                Button(text=day, pos_hint={'x': 0.32 + count, 'y': 0.8}, size_hint=(self.grid_button_length, 0.032))
+                Button(text=day, pos_hint={'x': self.grid_buttons_x + count, 'y': self.grid_buttons_y},
+                       size_hint=(self.grid_button_length, self.grid_button_height))
             )
             count += self.grid_button_length
 
     def create_schedule_row_headers(self):
-        count = self.grid_button_height
+        y_offset = 0
 
         start_time = self.grid_start_time
-        for time in range(self.get_num_of_intervals(self.grid_start_time, self.grid_end_time, 30) + 1):
+        num_of_grid_boxes = self.get_num_of_intervals(self.grid_start_time, self.grid_end_time, 30)
+        for time in range(num_of_grid_boxes + 1):
             self.add_widget(Button(
                 text=start_time.strftime(self.time_format),
-                pos_hint={'x': 0.32, 'y': 0.8 - count},
+                pos_hint={'x': self.grid_buttons_x, 'y': self.grid_buttons_y - self.grid_button_height - y_offset},
                 size_hint=(self.grid_button_length, self.grid_button_height)
             ))
 
             start_time = start_time + timedelta(minutes=30)
-            count += self.grid_button_height
+            y_offset += self.grid_button_height
 
     def create_schedule_grid_buttons(self):
         time_grid = GridLayout(
             size_hint=(self.grid_button_length * 6, self.grid_button_height * 31),
-            pos_hint={'x': 0.41, 'y': 0.056},
+            pos_hint={
+                'x': self.grid_buttons_x + self.grid_button_length,
+                'y': self.grid_buttons_y - (self.grid_button_height * 31)
+            },
             cols=6, rows=31
         )
 
@@ -154,10 +161,10 @@ class RoomSchedule(FloatLayout):
                         Button(
                             text=start_time.strftime(self.time_format) + " " + end_time.strftime(self.time_format),
                             pos_hint={
-                                'x': 0.32 + (counter * self.grid_button_length),
-                                'y': (0.8 - button_height) - y_offset
+                                'x': self.grid_buttons_x + (counter * self.grid_button_length),
+                                'y': self.grid_buttons_y - button_height - y_offset
                             },
-                            size_hint=(0.09, button_height)
+                            size_hint=(self.grid_button_length, button_height)
                         )
                     )
                 counter += 1
