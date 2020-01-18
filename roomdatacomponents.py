@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.togglebutton import ToggleButton
 
 
 class RoomDataComponents(FloatLayout):
@@ -14,49 +13,23 @@ class RoomDataComponents(FloatLayout):
     def __init__(self, **kwargs):
         super(RoomDataComponents, self).__init__(**kwargs)
 
-        self.daily_toggle = ToggleButton(
-            text="Daily Schedule", state="down", group="view", size_hint=(0.1, 0.1), pos_hint={'x': 0.75, 'y': 0.90}
-        )
-        self.information_toggle = ToggleButton(
-            text="Room Info", group="view", size_hint=(0.1, 0.1), pos_hint={'x': 0.85, 'y': 0.90}
-        )
-
-        self.daily_toggle.bind(on_release=self.check_toggle_state)
-        self.information_toggle.bind(on_release=self.check_toggle_state)
-        self.daily_toggle.disabled = True
-        self.information_toggle.disabled = True
-
         self.current_view = FloatLayout()
 
-        self.add_widget(self.daily_toggle)
-        self.add_widget(self.information_toggle)
         self.add_widget(self.current_view)
-
-    def check_toggle_state(self, button):
-        if self.information_toggle.disabled:
-            self.information_toggle.disabled = False
-            self.daily_toggle.disabled = True
-
-            self.destroy_current_view()
-            self.current_view = RoomSchedule(self.room_data)
-            self.add_widget(self.current_view)
-
-        else:
-            self.daily_toggle.disabled = False
-            self.information_toggle.disabled = True
-
-            self.destroy_current_view()
-            self.current_view = RoomInformation(self.room_data)
-            self.add_widget(self.current_view)
 
     def show_room_data(self, room_data):
         self.room_data = self.parse_room_data(room_data)
-        self.check_toggle_state(None)
+        self.create_room_stats()
 
-    # TODO
+    def create_room_stats(self):
+        self.destroy_current_view()
+        self.current_view.add_widget(RoomSchedule(self.room_data))
+        self.current_view.add_widget(RoomInformation(self.room_data))
+
     def destroy_current_view(self):
         self.remove_widget(self.current_view)
-        self.current_view = None
+        self.current_view = FloatLayout()
+        self.add_widget(self.current_view)
 
     @staticmethod
     def parse_room_data(raw_data):
@@ -81,15 +54,12 @@ class RoomDataComponents(FloatLayout):
 
 class RoomSchedule(FloatLayout):
 
-    # available_button.background_normal = ""
-    # available_button.background_color = (1, 0, 0, 1)
-
     time_format = "%I:%M %p"
 
-    grid_buttons_x = 0.28
-    grid_buttons_y = 0.85
-    grid_button_length = 0.09
-    grid_button_height = 0.026
+    grid_buttons_x = 0.27
+    grid_buttons_y = 0.95
+    grid_button_length = 0.1
+    grid_button_height = 0.030
     grid_start_time = datetime.strptime("07:00 AM", time_format)
     grid_end_time = end_time = datetime.strptime("10:00 PM", time_format)
 
@@ -149,7 +119,7 @@ class RoomSchedule(FloatLayout):
 
         for room in room_data:
             start_time = datetime.strptime(room[7][:-6] + room[7][-3:], self.time_format)
-            end_time = datetime.strptime(room[8][:-6] + room[7][-3:], self.time_format)
+            end_time = datetime.strptime(room[8][:-6] + room[8][-3:], self.time_format)
             button_height = self.get_num_of_intervals(start_time, end_time, 5) * time_sub_section
 
             counter = 1
@@ -183,3 +153,31 @@ class RoomInformation(FloatLayout):
 
     def __init__(self, data, **kwargs):
         super(RoomInformation, self).__init__(**kwargs)
+
+        self.create_room_information_view(data)
+
+    def create_room_information_view(self, data):
+        background = Button(size_hint=(0.2, 0.60), pos_hint={'x': 0.025, 'y': 0.02})
+        background.disabled = True
+
+        bldg_name = Button(text="BUILDING: " + data[0][6][:-4], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.58})
+        bldg_name.background_color = (0, 0.2, 1, 1)
+
+        room_num = Button(text="ROOM: " + data[0][6][-4:], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.54})
+        room_num.background_color = (0, 0.2, 1, 1)
+
+        departments = set()
+
+        for session in data:
+            departments.add(session[0])
+
+        department_display = Button(
+            text="DEPARTMENTS: " + "".join([str(x) + " & " for x in list(departments)])[:-3],
+            size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.50}
+        )
+        department_display.background_color = (0, 0.2, 1, 1)
+
+        self.add_widget(background)
+        self.add_widget(bldg_name)
+        self.add_widget(room_num)
+        self.add_widget(department_display)

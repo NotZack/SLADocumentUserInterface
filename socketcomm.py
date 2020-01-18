@@ -12,7 +12,7 @@ def open_socket(port_number):
 def send_query_to_socket(message):
     client_socket.sendall((message + '\n').encode())
 
-    data = client_socket.recv(2048).decode()
+    data = client_socket.recv(4096).decode()
     return data
 
 
