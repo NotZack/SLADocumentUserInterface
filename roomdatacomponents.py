@@ -25,9 +25,12 @@ class RoomDataComponents(FloatLayout):
         self.destroy_current_view()
         self.current_view.add_widget(RoomSchedule(self.room_data))
         self.current_view.add_widget(RoomInformation(self.room_data))
+        self.current_view.add_widget(RoomInformation.session_view)
 
     def destroy_current_view(self):
         self.remove_widget(self.current_view)
+        RoomInformation.session_view = FloatLayout()
+
         self.current_view = FloatLayout()
         self.add_widget(self.current_view)
 
@@ -127,17 +130,21 @@ class RoomSchedule(FloatLayout):
                 if day == "Y":
                     y_offset = self.get_num_of_intervals(self.grid_start_time, start_time, 5) * time_sub_section
 
-                    self.add_widget(
-                        Button(
-                            text=start_time.strftime(self.time_format) + " " + end_time.strftime(self.time_format),
-                            pos_hint={
-                                'x': self.grid_buttons_x + (counter * self.grid_button_length),
-                                'y': self.grid_buttons_y - button_height - y_offset
-                            },
-                            size_hint=(self.grid_button_length, button_height)
-                        )
-                    )
+                    self.create_session_button(start_time, end_time, counter, button_height, y_offset, room)
+
                 counter += 1
+
+    def create_session_button(self, start_time, end_time, counter, button_height, y_offset, room):
+        session_button = Button(
+            text=start_time.strftime(self.time_format) + " " + end_time.strftime(self.time_format),
+            pos_hint={
+                'x': self.grid_buttons_x + (counter * self.grid_button_length),
+                'y': self.grid_buttons_y - button_height - y_offset
+            },
+            size_hint=(self.grid_button_length, button_height)
+        )
+        session_button.bind(on_press=lambda x: RoomInformation.create_session_information_view(room))
+        self.add_widget(session_button)
 
     @staticmethod
     def get_num_of_intervals(start_time, end_time, interval_length):
@@ -151,14 +158,14 @@ class RoomSchedule(FloatLayout):
 
 class RoomInformation(FloatLayout):
 
+    session_view = FloatLayout()
+
     def __init__(self, data, **kwargs):
         super(RoomInformation, self).__init__(**kwargs)
 
         self.create_room_information_view(data)
 
     def create_room_information_view(self, data):
-        background = Button(size_hint=(0.2, 0.60), pos_hint={'x': 0.025, 'y': 0.02})
-        background.disabled = True
 
         bldg_name = Button(text="BUILDING: " + data[0][6][:-4], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.58})
         bldg_name.background_color = (0, 0.2, 1, 1)
@@ -177,7 +184,37 @@ class RoomInformation(FloatLayout):
         )
         department_display.background_color = (0, 0.2, 1, 1)
 
-        self.add_widget(background)
+        session_break = Button(text="SESSION INFORMATION", size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.46})
+        session_break.background_color = (0, 1, 0.2, 1)
+
         self.add_widget(bldg_name)
         self.add_widget(room_num)
         self.add_widget(department_display)
+        self.add_widget(session_break)
+
+    @staticmethod
+    def create_session_information_view(data):
+        RoomInformation.session_view.clear_widgets()
+
+        session_dept = Button(
+            text="SESSION'S DEPARTMENT: " + data[0], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.42}
+        )
+        session_dept.background_color = (0, 1, 0.2, 1)
+
+        session_name = Button(text="CLASS NAME: " + data[2], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.38})
+        session_name.background_color = (0, 1, 0.2, 1)
+
+        instructor_name = Button(
+            text="INSTRUCTOR NAME: " + data[15], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.34}
+        )
+        instructor_name.background_color = (0, 1, 0.2, 1)
+
+        instructor_eid = Button(
+            text="INSTRUCTOR EID: " + data[16], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.30}
+        )
+        instructor_eid.background_color = (0, 1, 0.2, 1)
+
+        RoomInformation.session_view.add_widget(session_dept)
+        RoomInformation.session_view.add_widget(session_name)
+        RoomInformation.session_view.add_widget(instructor_name)
+        RoomInformation.session_view.add_widget(instructor_eid)
