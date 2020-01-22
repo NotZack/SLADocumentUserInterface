@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
+'''
+The room data components of the app
+'''
 
 
 class RoomDataComponents(FloatLayout):
@@ -17,16 +20,19 @@ class RoomDataComponents(FloatLayout):
 
         self.add_widget(self.current_view)
 
+    # Calls for the creation of room data components
     def show_room_data(self, room_data):
         self.room_data = self.parse_room_data(room_data)
         self.create_room_stats()
 
+    # Creates and displays the room data component components
     def create_room_stats(self):
         self.destroy_current_view()
         self.current_view.add_widget(RoomSchedule(self.room_data))
         self.current_view.add_widget(RoomInformation(self.room_data))
         self.current_view.add_widget(RoomInformation.session_view)
 
+    # Destroys any previous room data display
     def destroy_current_view(self):
         self.remove_widget(self.current_view)
         RoomInformation.session_view = FloatLayout()
@@ -34,6 +40,7 @@ class RoomDataComponents(FloatLayout):
         self.current_view = FloatLayout()
         self.add_widget(self.current_view)
 
+    # Parses raw room data into a 2D array where the outer is each individual room, and the inner is individual fields
     @staticmethod
     def parse_room_data(raw_data):
         raw_data = raw_data[1:-1]
@@ -49,10 +56,12 @@ class RoomDataComponents(FloatLayout):
             if len(inner_array) > 1 and (len(outer_array) == 0 or (outer_array[len(outer_array) - 1] != inner_array)):
                 outer_array.append(inner_array)
 
-        for x in outer_array:
-            print(x, " ")
-
         return outer_array
+
+
+'''
+The room schedule grid component
+'''
 
 
 class RoomSchedule(FloatLayout):
@@ -74,6 +83,7 @@ class RoomSchedule(FloatLayout):
         self.create_schedule_grid_buttons()
         self.populate_schedule_data(data)
 
+    # Creates the column headers for the schedule grid; relevant days of the week
     def create_schedule_col_headers(self):
         col_headers = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
@@ -85,6 +95,7 @@ class RoomSchedule(FloatLayout):
             )
             count += self.grid_button_length
 
+    # Creates the row headers for the schedule grid; relevant day times at a set interval
     def create_schedule_row_headers(self):
         y_offset = 0
 
@@ -100,6 +111,7 @@ class RoomSchedule(FloatLayout):
             start_time = start_time + timedelta(minutes=30)
             y_offset += self.grid_button_height
 
+    # Creates an empty even grid for class sessions
     def create_schedule_grid_buttons(self):
         time_grid = GridLayout(
             size_hint=(self.grid_button_length * 6, self.grid_button_height * 31),
@@ -117,10 +129,12 @@ class RoomSchedule(FloatLayout):
 
         self.add_widget(time_grid)
 
+    # Populates the empty schedule grid with schedule data for the given room
     def populate_schedule_data(self, room_data):
         time_sub_section = self.grid_button_height / 6
 
         for room in room_data:
+            # Splits trailing seconds (always 00), AM and PM times
             start_time = datetime.strptime(room[7][:-6] + room[7][-3:], self.time_format)
             end_time = datetime.strptime(room[8][:-6] + room[8][-3:], self.time_format)
             button_height = self.get_num_of_intervals(start_time, end_time, 5) * time_sub_section
@@ -134,6 +148,7 @@ class RoomSchedule(FloatLayout):
 
                 counter += 1
 
+    # Creates a button for given session data; clicking populates room information view
     def create_session_button(self, start_time, end_time, counter, button_height, y_offset, room):
         session_button = Button(
             text=start_time.strftime(self.time_format) + " " + end_time.strftime(self.time_format),
@@ -146,6 +161,7 @@ class RoomSchedule(FloatLayout):
         session_button.bind(on_press=lambda x: RoomInformation.create_session_information_view(room))
         self.add_widget(session_button)
 
+    # Calculates the number of given time intervals between the given start and end time
     @staticmethod
     def get_num_of_intervals(start_time, end_time, interval_length):
         counter = 0
@@ -154,6 +170,11 @@ class RoomSchedule(FloatLayout):
             counter += 1
 
         return counter
+
+
+'''
+The view of room and session specific information
+'''
 
 
 class RoomInformation(FloatLayout):
@@ -165,6 +186,7 @@ class RoomInformation(FloatLayout):
 
         self.create_room_information_view(data)
 
+    # Populates RoomInformation with the given room data
     def create_room_information_view(self, data):
 
         bldg_name = Button(text="BUILDING: " + data[0][6][:-4], size_hint=(0.2, 0.04), pos_hint={'x': 0.025, 'y': 0.58})
@@ -192,6 +214,7 @@ class RoomInformation(FloatLayout):
         self.add_widget(department_display)
         self.add_widget(session_break)
 
+    # Populates the given session specific data when that session data button was pressed
     @staticmethod
     def create_session_information_view(data):
         RoomInformation.session_view.clear_widgets()

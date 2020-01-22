@@ -1,7 +1,11 @@
+from kivy.core.window import Window
 from kivy.uix.floatlayout import FloatLayout
 
 import roomdatacomponents
 import searchcomponents
+'''
+The root widget for all kivy components
+'''
 
 
 class RootLayout(FloatLayout):
@@ -11,6 +15,8 @@ class RootLayout(FloatLayout):
 
     def __init__(self, **kwargs):
         super(RootLayout, self).__init__(**kwargs)
+
+        Window.size = (1920, 1080)
 
         self.search_display = searchcomponents.SearchComponents()
         self.room_data_display = roomdatacomponents.RoomDataComponents()
